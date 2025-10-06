@@ -3,164 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cek Kehadiran Siswa</title>
+  <title>Monitor Kehadiran Siswa SDN 2 Karangmangu</title>
   <style>
+    :root {
+      --utama: #4f46e5;
+      --abu: #f3f4f6;
+      --putih: #ffffff;
+      --teks: #1f2937;
+    }
     body {
       font-family: "Poppins", sans-serif;
-      background: #f9fafb;
+      background: var(--abu);
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
-    h1 {
-      text-align: center;
-      color: #2563eb;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin-top: 20px;
-    }
-    table {
+    header {
+      background: var(--utama);
+      color: var(--putih);
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      padding: 8px;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-      font-size: 14px;
-    }
-    th {
-      background: #2563eb;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background: #f3f4f6;
-    }
-    input[type="date"], select {
-      padding: 8px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-    }
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #1d4ed8;
-    }
-    #loading {
       text-align: center;
+      padding: 1rem 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    main {
+      margin-top: 2rem;
+      background: var(--putih);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+    label {
+      font-weight: 500;
+      color: var(--teks);
+    }
+    input[type="date"] {
+      margin-top: 1rem;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      border: 2px solid var(--utama);
+      border-radius: 0.6rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    input[type="date"]:focus {
+      border-color: #3730a3;
+    }
+    #status {
+      margin-top: 1rem;
+      font-weight: 500;
+      color: var(--teks);
+    }
+    footer {
+      margin-top: auto;
+      padding: 1rem;
+      font-size: 0.9rem;
       color: #6b7280;
-      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>Cek Kehadiran Siswa</h1>
-
-  <div class="card">
-    <label for="tanggal">Pilih Tanggal:</label>
+  <header>📅 Monitor Kehadiran Siswa SDN 2 Karangmangu</header>
+  <main>
+    <label for="tanggal">Pilih Tanggal Absensi:</label><br />
     <input type="date" id="tanggal" />
-    <button onclick="simpanTanggal()">Simpan ke I2</button>
-    <button onclick="muatData()">Tampilkan Data</button>
-  </div>
-
-  <div id="loading">Memuat data...</div>
-  <div id="tabel-container" class="card" style="display:none;">
-    <table id="tabel-absen">
-      <thead>
-        <tr>
-          <th>NIS</th>
-          <th>Nama</th>
-          <th>Kelas</th>
-          <th>Absen Masuk</th>
-          <th>Jam Masuk</th>
-          <th>Absen Pulang</th>
-          <th>Jam Pulang</th>
-          <th>Keterangan</th>
-          <th>Tanggal</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+    <p id="status">Silakan pilih tanggal untuk disimpan.</p>
+  </main>
+  <footer>© 2025 SDN 2 Karangmangu Sarang</footer>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxV0dak7kxqAZ8LHLzmc5e1xod_nQ3Od3DRtKz9MeVNEVi5F5kikU45RcmykPrJKReQ/exec';
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbyvVOG5uC9lBuchUkZigFgGz1HGS8TNRiPFLfAevsLCmDe7GKg54RelCvmOOxTbmcpo/exec";
 
-    async function muatData() {
-      document.getElementById("loading").style.display = "block";
-      document.getElementById("tabel-container").style.display = "none";
+    const tanggalInput = document.getElementById("tanggal");
+    const status = document.getElementById("status");
 
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        const tanggalInput = document.getElementById("tanggal").value;
-        const tbody = document.querySelector("#tabel-absen tbody");
-        tbody.innerHTML = "";
-
-        const filtered = tanggalInput
-          ? data.filter(d => {
-              const tgl = new Date(d.Tanggal);
-              if (isNaN(tgl)) return false;
-              const yyyy = tgl.getFullYear();
-              const mm = String(tgl.getMonth()+1).padStart(2, "0");
-              const dd = String(tgl.getDate()).padStart(2, "0");
-              return `${yyyy}-${mm}-${dd}` === tanggalInput;
-            })
-          : data;
-
-        filtered.forEach(d => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${d.NIS || ""}</td>
-            <td>${d.Nama || ""}</td>
-            <td>${d.Kelas || ""}</td>
-            <td>${d["Absen Masuk"] || ""}</td>
-            <td>${d["Jam Masuk"] || ""}</td>
-            <td>${d["Absen Pulang"] || ""}</td>
-            <td>${d["Jam Pulang"] || ""}</td>
-            <td>${d.Keterangan || ""}</td>
-            <td>${d.Tanggal || ""}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("tabel-container").style.display = "block";
-      } catch (err) {
-        console.error(err);
-        document.getElementById("loading").innerText = "Gagal memuat data.";
-      }
-    }
-
-    async function simpanTanggal() {
-      const tanggal = document.getElementById("tanggal").value;
-      if (!tanggal) return alert("Pilih tanggal terlebih dahulu!");
+    tanggalInput.addEventListener("change", async () => {
+      const tanggal = tanggalInput.value;
+      status.textContent = "⏳ Menyimpan tanggal...";
 
       try {
-        await fetch(API_URL, {
+        const res = await fetch(API_URL, {
           method: "POST",
-          body: JSON.stringify({ cell: "I2", value: tanggal }),
+          body: JSON.stringify({ tanggal }),
           headers: { "Content-Type": "application/json" },
         });
-        alert("Tanggal berhasil disimpan ke I2!");
-      } catch (err) {
-        alert("Gagal menyimpan tanggal.");
-        console.error(err);
-      }
-    }
 
-    muatData();
+        const text = await res.text();
+        status.textContent = "✅ " + text;
+        status.style.color = "#16a34a";
+      } catch (err) {
+        status.textContent = "❌ Gagal menyimpan: " + err.message;
+        status.style.color = "#dc2626";
+      }
+    });
   </script>
 </body>
 </html>
-
