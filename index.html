@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cek Kehadiran Siswa</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #2563eb;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #2563eb;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f3f4f6;
+    }
+    input[type="date"], select {
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    #loading {
+      text-align: center;
+      color: #6b7280;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cek Kehadiran Siswa</h1>
+
+  <div class="card">
+    <label for="tanggal">Pilih Tanggal:</label>
+    <input type="date" id="tanggal" />
+    <button onclick="simpanTanggal()">Simpan ke I2</button>
+    <button onclick="muatData()">Tampilkan Data</button>
+  </div>
+
+  <div id="loading">Memuat data...</div>
+  <div id="tabel-container" class="card" style="display:none;">
+    <table id="tabel-absen">
+      <thead>
+        <tr>
+          <th>NIS</th>
+          <th>Nama</th>
+          <th>Kelas</th>
+          <th>Absen Masuk</th>
+          <th>Jam Masuk</th>
+          <th>Absen Pulang</th>
+          <th>Jam Pulang</th>
+          <th>Keterangan</th>
+          <th>Tanggal</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbymXlBS8_XeKbntUmvz5jiLqclfGSDEYr-AnGLG17SPz6LyOQeRl5YHoa1L2UomaVH3/exec';
+
+    async function muatData() {
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("tabel-container").style.display = "none";
+
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        const tanggalInput = document.getElementById("tanggal").value;
+        const tbody = document.querySelector("#tabel-absen tbody");
+        tbody.innerHTML = "";
+
+        const filtered = tanggalInput
+          ? data.filter(d => {
+              const tgl = new Date(d.Tanggal);
+              if (isNaN(tgl)) return false;
+              const yyyy = tgl.getFullYear();
+              const mm = String(tgl.getMonth()+1).padStart(2, "0");
+              const dd = String(tgl.getDate()).padStart(2, "0");
+              return `${yyyy}-${mm}-${dd}` === tanggalInput;
+            })
+          : data;
+
+        filtered.forEach(d => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${d.NIS || ""}</td>
+            <td>${d.Nama || ""}</td>
+            <td>${d.Kelas || ""}</td>
+            <td>${d["Absen Masuk"] || ""}</td>
+            <td>${d["Jam Masuk"] || ""}</td>
+            <td>${d["Absen Pulang"] || ""}</td>
+            <td>${d["Jam Pulang"] || ""}</td>
+            <td>${d.Keterangan || ""}</td>
+            <td>${d.Tanggal || ""}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("tabel-container").style.display = "block";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("loading").innerText = "Gagal memuat data.";
+      }
+    }
+
+    async function simpanTanggal() {
+      const tanggal = document.getElementById("tanggal").value;
+      if (!tanggal) return alert("Pilih tanggal terlebih dahulu!");
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ cell: "I2", value: tanggal }),
+          headers: { "Content-Type": "application/json" },
+        });
+        alert("Tanggal berhasil disimpan ke I2!");
+      } catch (err) {
+        alert("Gagal menyimpan tanggal.");
+        console.error(err);
+      }
+    }
+
+    muatData();
+  </script>
+</body>
+</html>
